@@ -2,13 +2,13 @@ package com.babich.map;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 public class HashMap implements Map {
     private static final int INITIAL_CAPACITY = 5;
     static final float DEFAULT_LOAD_FACTOR;
     private int size;
-    private ArrayList<Entry>[] bucket;
-
+    private static ArrayList<Entry>[] bucket;
 
     static {
         DEFAULT_LOAD_FACTOR = 0.75f;
@@ -63,23 +63,31 @@ public class HashMap implements Map {
             }
     }
 
-    public void putAllIfAbsent(Object key, Object value) {
-
+    public void putAllIfAbsent(HashMap map) {
+            Iterator<ArrayList<Entry>> iterator = map.iterator();
+            while(iterator.hasNext()){
+                List<Entry> listEntries = iterator.next();
+                for (Entry entry : listEntries) {
+                    putIfAbsent(entry.key, entry.value);
+                }
+            }
     }
-
+    
+// если указанный ключ больше не совпадает со значением или = 0,
+// связываем его со значением
     public Object putIfAbsent(Object key, Object value) {
-
+        if (!HashMap.containsKey(key))
+            return HashMap.put(key, value);
+        else
+            return HashMap.get(key);
     }
-
-
-
-    private int getBucketIndex(Object key) {
-        // находим, по какому индексу (в каком ведре)  находится элемент
+    // находим, по какому индексу (в каком ведре)  находится элемент
+    private static int getBucketIndex(Object key) {
         return Math.abs(key.hashCode()) % bucket.length;
     }
 
     @Override
-    public Object get(Object key) {
+    public static Object get(Object key) {
         int index = getBucketIndex(key);
         for (Entry entry : bucket[index]) {
             if (entry.key.equals(key)) {
@@ -100,7 +108,7 @@ public class HashMap implements Map {
     }
 
     @Override
-    public boolean containsKey(Object key) {
+    public static boolean containsKey(Object key) {
         return (key==null ? key==null : key.equals(key));
     }
 
