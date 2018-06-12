@@ -1,11 +1,18 @@
 package com.babich.map;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class HashMap implements Map {
     private static final int INITIAL_CAPACITY = 5;
+    static final float DEFAULT_LOAD_FACTOR;
     private int size;
     private ArrayList<Entry>[] bucket;
+
+
+    static {
+        DEFAULT_LOAD_FACTOR = 0.75f;
+    }
 
     public HashMap() {
         this(INITIAL_CAPACITY);
@@ -20,7 +27,6 @@ public class HashMap implements Map {
             bucket[i] = new ArrayList<>();
         }
     }
-
 
     @Override
     // если у нас уже был ключ и значение, то когда помещаем новое значение,
@@ -43,6 +49,29 @@ public class HashMap implements Map {
 
         return null;
     }
+
+    // если в хеш-мапе, в которую мы кладем значения,
+    // есть пересечения с ключами хеш-мапы, которую вкладываем,
+    // то она перезатирает ключи хеш-мапы, в которую была положена
+    public void putAll(HashMap map) {
+            Iterator<ArrayList<Entry>> iterator = map.iterator();
+            while(iterator.hasNext()){
+                ArrayList<Entry> listEntries = iterator.next();
+                for (Entry entry : listEntries) {
+                    put(entry.key, entry.value);
+                }
+            }
+    }
+
+    public void putAllIfAbsent(Object key, Object value) {
+
+    }
+
+    public Object putIfAbsent(Object key, Object value) {
+
+    }
+
+
 
     private int getBucketIndex(Object key) {
         // находим, по какому индексу (в каком ведре)  находится элемент
@@ -83,6 +112,24 @@ public class HashMap implements Map {
         public Entry(Object key, Object value) {
             this.key = key;
             this.value = value;
+        }
+    }
+
+    public Iterator<ArrayList<Entry>> iterator() {
+        return new newIterator();
+    }
+
+    private class newIterator implements Iterator<ArrayList<Entry>> {
+        int current;
+
+        public boolean hasNext() {
+            return current != bucket.length;
+        }
+
+        public ArrayList<Entry> next() {
+            int i = current;
+            current++;
+            return bucket[i];
         }
     }
 }
