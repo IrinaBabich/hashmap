@@ -6,13 +6,9 @@ import java.util.List;
 
 public class HashMap implements Map {
     private static final int INITIAL_CAPACITY = 5;
-    static final float DEFAULT_LOAD_FACTOR;
+    static final float DEFAULT_LOAD_FACTOR = 0.75f;
     private int size;
     private static ArrayList<Entry>[] bucket;
-
-    static {
-        DEFAULT_LOAD_FACTOR = 0.75f;
-    }
 
     public HashMap() {
         this(INITIAL_CAPACITY);
@@ -22,7 +18,7 @@ public class HashMap implements Map {
         if (bucketCount <= 0) {
             throw new IllegalArgumentException("Bucket size should be > 0 , bucket count =" + bucketCount);
         }
-        this.bucket = new ArrayList[bucketCount];
+        bucket = new ArrayList[bucketCount];
         for (int i = 0; i < bucketCount; i++) {
             bucket[i] = new ArrayList<>();
         }
@@ -32,62 +28,74 @@ public class HashMap implements Map {
     // если у нас уже был ключ и значение, то когда помещаем новое значение,
     // происходит апдейт и метод нам возвращает новое значение
     public Object put(Object key, Object value) {
+        boolean updated = false;
+        Object oldValue = null;
         int index = getBucketIndex(key);
-
-        ArrayList<Entry> bucket = this.bucket[index];
-        for (Entry entry : bucket) {
+        int threshold = (int) (bucket.length * DEFAULT_LOAD_FACTOR);
+        if (size > threshold) {
+            growSize();
+        }
+        for (Entry entry : bucket[index]) {
             if (key.equals(entry.key)) {
-                Object oldValue = entry.value;
+                oldValue = entry.value;
                 // подменяем значение, если решили внести вместо существующего oldValue
                 entry.value = value;
-                return oldValue;
+                updated = true;
             }
         }
-        // если не вносим новое значение, делаем возврат того, что было
-        bucket.add(new Entry(key, value));
-        size++;
 
-        return null;
+        // если не вносим новое значение, делаем возврат того, что было
+        if (!updated) {
+            bucket[index].add(new Entry(key, value));
+            size++;
+        }
+        return oldValue;
     }
 
-    // если в хеш-мапе, в которую мы кладем значения,
-    // есть пересечения с ключами хеш-мапы, которую вкладываем,
-    // то она перезатирает ключи хеш-мапы, в которую была положена
-    public void putAll(HashMap map) {
-            Iterator<ArrayList<Entry>> iterator = map.iterator();
-            while(iterator.hasNext()){
-                ArrayList<Entry> listEntries = iterator.next();
-                for (Entry entry : listEntries) {
-                    put(entry.key, entry.value);
-                }
+    private void growSize() {
+        int newSize = bucket.length * 2;
+        ArrayList<Entry>[] newBuckets = new ArrayList[newSize];
+        for (int i = 0; i < newSize; i++) {
+            newBuckets[i] = new ArrayList<>();
+        }
+    }
+
+    // метод копирует одну хеш-мапу в другую
+    public void putAll (HashMap map){
+        Iterator<ArrayList<Entry>> iterator = map.iterator();
+        while (iterator.hasNext()) {
+            ArrayList<Entry> listEntries = iterator.next();
+            for (Entry entry : listEntries) {
+                put(entry.key, entry.value);
             }
+        }
     }
 
     public void putAllIfAbsent(HashMap map) {
-            Iterator<ArrayList<Entry>> iterator = map.iterator();
-            while(iterator.hasNext()){
-                List<Entry> listEntries = iterator.next();
-                for (Entry entry : listEntries) {
-                    putIfAbsent(entry.key, entry.value);
-                }
+        Iterator<ArrayList<Entry>> iterator = map.iterator();
+        while (iterator.hasNext()) {
+            List<Entry> listEntries = iterator.next();
+            for (Entry entry : listEntries) {
+                putIfAbsent(entry.key, entry.value);
             }
+        }
     }
-    
-// если указанный ключ больше не совпадает со значением или = 0,
-// связываем его со значением
+
+    // если ключ не совпадает со значением, возвращает предыдущее значение связанное с ключем
     public Object putIfAbsent(Object key, Object value) {
         if (!HashMap.containsKey(key))
-            return HashMap.put(key, value);
+            return HashMap(key, value);
         else
             return HashMap.get(key);
     }
+
     // находим, по какому индексу (в каком ведре)  находится элемент
-    private static int getBucketIndex(Object key) {
+    private int getBucketIndex(Object key) {
         return Math.abs(key.hashCode()) % bucket.length;
     }
 
     @Override
-    public static Object get(Object key) {
+    public Object get(Object key) {
         int index = getBucketIndex(key);
         for (Entry entry : bucket[index]) {
             if (entry.key.equals(key)) {
@@ -104,12 +112,12 @@ public class HashMap implements Map {
 
     @Override
     public boolean isEmpty() {
-        return size() == 0;
+        return size == 0;
     }
 
     @Override
-    public static boolean containsKey(Object key) {
-        return (key==null ? key==null : key.equals(key));
+    public boolean containsKey(Object key) {
+        return (key == null ? key == null : key.equals(key));
     }
 
     // класс-обертка для хранения ключа и значения
@@ -123,11 +131,11 @@ public class HashMap implements Map {
         }
     }
 
-    public Iterator<ArrayList<Entry>> iterator() {
-        return new newIterator();
+    public Iterator iterator() {
+        return new HashMapIterator();
     }
 
-    private class newIterator implements Iterator<ArrayList<Entry>> {
+    private class HashMapIterator implements Iterator {
         int current;
 
         public boolean hasNext() {
