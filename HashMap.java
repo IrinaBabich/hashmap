@@ -3,7 +3,7 @@ package com.babich.map;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-public class HashMap<K, V> implements Map<K, V> {
+public class HashMap<K, V> implements Map<K, V>, Iterable<HashMap<K, V>> {
     private static final int INITIAL_CAPACITY = 5;
     private static final double DEFAULT_LOAD_FACTOR = 0.75;
     private ArrayList<Entry<K, V>>[] buckets;
@@ -60,25 +60,18 @@ public class HashMap<K, V> implements Map<K, V> {
     }
 
     // метод копирует одну хеш-мапу в другую
-    public void putAll(HashMap<K, V> map) {
-        Iterator<ArrayList<Entry<K, V>>> iterator = map.iterator();
-        while (iterator.hasNext()) {
-            ArrayList<Entry<K, V>> listEntries = iterator.next();
-            for (Entry<K, V> entry : listEntries) {
-                put(entry.key, entry.value);
-            }
+    public void putAll(HashMap<K, V> hashMap) {
+        for (Entry<K, V> entry : hashMap) {
+            put(entry.key, entry.value);
         }
     }
 
-    public void putAllIfAbsent(HashMap<K, V> map) {
-        Iterator<ArrayList<Entry<K, V>>> iterator = map.iterator();
-        while (iterator.hasNext()) {
-            ArrayList<Entry<K, V>> listEntries = iterator.next();
-            for (Entry<K, V> entry : listEntries) {
-                putIfAbsent(entry.key, entry.value);
-            }
+    public void putAllIfAbsent(HashMap<K, V> hashMap) {
+        for (Entry<K, V> entry : hashMap) {
+            putIfAbsent(entry.key, entry.value);
         }
     }
+
 
     // если ключ не совпадает со значением, возвращает предыдущее значение связанное с ключем
     public V putIfAbsent(K key, V value) {
@@ -131,28 +124,35 @@ public class HashMap<K, V> implements Map<K, V> {
         }
     }
 
-    public Iterator iterator() {
+    public Iterator<Entry<K, V>> iterator() {
         return new HashMapIterator();
     }
 
-    private class HashMapIterator implements Iterator {
-        int bucketIndex = 0;
+    private class HashMapIterator implements Iterator<Entry<K, V>> {
+        private int index;
+        private int bucketIndex = 0;
+        private int arrayListIndex = 0;
 
-        // возвращает true, если элементы есть
-        public boolean hasNext() {
-            if (bucketIndex != buckets.length) {
-                return true;
+    // возвращает true, если элементы есть
+    public boolean hasNext() {
+        if (bucketIndex < size);
+        return false;
+    }
+
+    // возвращает последующее значение при итерации, идем Next-ом по 2-мерному массиву,
+    // в котором хранится HashMap
+
+    public Entry<K, V> next() {
+            for (int i = 0; i < buckets.length; i++) {
+                for (int j = 0; j < arrayListIndex; j++) {
+                    index++;
+                    return buckets[bucketIndex].get(arrayListIndex++);
+                }
+                bucketIndex++;
+                arrayListIndex = 0;
             }
-            return false;
-        }
-
-        // возвращает последующее значение при итерации
-        @Override
-        public Object next() {
-            ArrayList<Entry<K, V>> bucket = buckets[bucketIndex];
-            Object next = bucket.get(bucketIndex);
-            return next;
+            index++;
+            return null;
         }
     }
 }
-
