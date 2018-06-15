@@ -1,25 +1,24 @@
 package com.babich.map;
 
-public interface Map {
+public interface Map<K, V> {
 
-    Object put(Object key, Object value);
+    Object put(K key, V value);
 
     void growSize();
 
-    void putAll (HashMap map);
-    
-    void putAllIfAbsent(HashMap map);
+    void putAll (HashMap<K, V> map);
 
-    Object putIfAbsent(Object key, Object value);
-    
-    int getBucketIndex(Object key);
+    void putAllIfAbsent(HashMap<K, V> map);
 
-    Object get(Object key);
+    Object putIfAbsent(K key, V value);
+
+    int getBucketIndex(K key);
+
+    Object get(K key);
 
     int size();
 
     boolean isEmpty();
 
-    boolean containsKey(Object key);
+    boolean containsKey(K key);
 }
-
