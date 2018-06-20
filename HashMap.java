@@ -2,8 +2,9 @@ package com.babich.map;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
-public class HashMap<K, V> implements Map<K, V>, Iterable<HashMap<K, V>> {
+public class HashMap<K, V> implements Map<K, V>, Iterable<HashMap.Entry<K, V>> {
     private static final int INITIAL_CAPACITY = 5;
     private static final double DEFAULT_LOAD_FACTOR = 0.75;
     private ArrayList<Entry<K, V>>[] buckets;
@@ -30,9 +31,8 @@ public class HashMap<K, V> implements Map<K, V>, Iterable<HashMap<K, V>> {
         boolean updated = false;
         V oldValue = null;
         int index = getBucketIndex(key);
-
         int threshold = (int) (buckets.length * DEFAULT_LOAD_FACTOR);
-        if (size > threshold) {
+        if (size >= threshold) {
             growSize();
         }
         for (Entry<K, V> entry : buckets[index]) {
@@ -52,10 +52,25 @@ public class HashMap<K, V> implements Map<K, V>, Iterable<HashMap<K, V>> {
     }
 
     public void growSize() {
-        int newSize = (buckets.length * 2) + 1;
+        int newSize = buckets.length * 2;
         ArrayList<Entry<K, V>>[] newBuckets = new ArrayList[newSize];
         for (int i = 0; i < newSize; i++) {
-            newBuckets[i] = new ArrayList<>();
+            newBuckets[i] = new ArrayList<>(1);
+        }
+        transferEntries(newBuckets);
+        buckets = newBuckets;
+    }
+
+    private void transferEntries(ArrayList<Entry<K,V>>[] newHashMap) {
+        for (ArrayList<Entry<K, V>> bucket : buckets) {
+            for (Entry<K, V> entry : bucket) {
+                if (entry.key == null) {
+                    newHashMap[0].add(entry);
+                } else {
+                    int index = getBucketIndex(entry.key, newHashMap.length);
+                    newHashMap[index].add(entry);
+                }
+            }
         }
     }
 
@@ -113,45 +128,53 @@ public class HashMap<K, V> implements Map<K, V>, Iterable<HashMap<K, V>> {
         return (key == null ? key == null : key.equals(key));
     }
 
-    // класс-обертка для хранения ключа и значения
-    private static class Entry<K, V> {
-        private K key;
-        private V value;
-
-        public Entry(K key, V value) {
-            this.key = key;
-            this.value = value;
-        }
-    }
-
     public Iterator<Entry<K, V>> iterator() {
         return new HashMapIterator();
     }
 
+    // класс-обертка для хранения ключа и значения
+    public static class Entry<K, V> {
+        private K key;
+        private V value;
+
+        private Entry(K key, V value) {
+            this.key = key;
+            this.value = value;
+        }
+
+        public K getKey() {
+            return key;
+        }
+
+        public V getValue() {
+            return value;
+        }
+    }
     private class HashMapIterator implements Iterator<Entry<K, V>> {
-        private int index;
-        private int bucketIndex = 0;
-        private int arrayListIndex = 0;
+        private int passedElementCount;
+        private int bucketIndex;
+        private Iterator<Entry<K, V>> bucketIterator;
 
     // возвращает true, если элементы есть
     public boolean hasNext() {
-        if (bucketIndex < size);
+        if (passedElementCount < size);
         return false;
     }
 
-    // возвращает последующее значение при итерации, идем Next-ом по 2-мерному массиву,
+    // возвращает последующее значение при итерации, идем next-ом по 2-мерному массиву,
     // в котором хранится HashMap
 
     public Entry<K, V> next() {
-            for (int i = 0; i < buckets.length; i++) {
-                for (int j = 0; j < arrayListIndex; j++) {
-                    index++;
-                    return buckets[bucketIndex].get(arrayListIndex++);
+            for (; bucketIndex < buckets.length; ) {
+                List<Entry<K, V>> bucket = buckets[bucketIndex];
+                bucketIterator = bucket.iterator();
+                while (bucketIterator.hasNext()) {
+                    passedElementCount++;
+                    return bucketIterator.next();
                 }
                 bucketIndex++;
-                arrayListIndex = 0;
             }
-            index++;
+            passedElementCount++;
             return null;
         }
     }
